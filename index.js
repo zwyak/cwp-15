@@ -17,6 +17,22 @@ const vehiclesRouter = express.Router();
 const geoRouter = express.Router();
 const managersRouter = express.Router();
 
+app.use((request, response, next) =>{
+  if (request.originalUrl == '/api/auth/register' || request.originalUrl == '/api/auth/login') next();
+  const token = request.get('Authorization');
+  if (!token) response.sendStatus(401);
+  const decode = jwt.verify(token, 'secret');
+
+  db.managers.findByPk(decode.id)
+  .then((m) =>{
+    request.manager = m;
+    next();
+  })
+  .catch((err) =>{
+    response.sendStatus(403);
+  })
+})
+
 fleetsRouter.get('/readall', (req, res) => {
   db.fleets.findAll({raw: true}).then((f) =>{
     res.send(f);

@@ -15,6 +15,7 @@ const fleetsRouter = express.Router();
 const motionsRouter = express.Router();
 const vehiclesRouter = express.Router();
 const geoRouter = express.Router();
+const managersRouter = express.Router();
 
 fleetsRouter.get('/readall', (req, res) => {
   db.fleets.findAll({raw: true}).then((f) =>{
@@ -166,6 +167,37 @@ geoRouter.get('/millage', (req, res) => {
 });
 
 app.use("/api/vehicles", geoRouter);
+
+managersRouter.post('/register', (req, res) => {
+  db.managers.create({
+    email: req.body.email,
+    password: bcrypt.hashSync(req.body.password, 10)
+  }).then((m) =>{
+    res.sendStatus(200);
+  }).catch((err) =>{
+    res.sendStatus(400);
+  });
+});
+
+managersRouter.post('/login', (req, res) => {
+  db.managers.findOne({where: {email: req.body.email}, raw: true})
+    .then((manager) =>{
+      if (bcrypt.compareSync(req.body.password, manager.password)){
+        const token = jwt.sign({
+          id: manager.id,
+          email: manager.email
+        }, 'secret', { expiresIn: '5m' });
+        res.send(JSON.stringify({token: token}));
+      }else{
+        throw err;
+      }
+    })
+    .catch((err) =>{
+      res.sendStatus(400);
+    });
+});
+
+app.use("/api/auth", managersRouter);
 
 app.listen(3000, () => {
   console.log('Server app listening on port 3000!');

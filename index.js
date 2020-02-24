@@ -187,7 +187,8 @@ managersRouter.post('/login', (req, res) => {
           id: manager.id,
           email: manager.email
         }, 'secret', { expiresIn: '5m' });
-        res.send(JSON.stringify({token: token}));
+        res.setHeader('Authorization', token);
+        res.sendStatus(200);
       }else{
         throw err;
       }

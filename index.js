@@ -18,10 +18,25 @@ const geoRouter = express.Router();
 const managersRouter = express.Router();
 
 app.use((request, response, next) =>{
-  if (request.originalUrl == '/api/auth/register' || request.originalUrl == '/api/auth/login') next();
+  if (request.originalUrl == '/api/auth/register' || request.originalUrl == '/api/auth/login'){
+    console.log(request.originalUrl);
+    next();
+    return;
+  }
   const token = request.get('Authorization');
-  if (!token) response.sendStatus(401);
-  const decode = jwt.verify(token, 'secret');
+  if (!token){
+    response.sendStatus(401);
+    return;
+  }
+  let decode;
+  try{
+    decode = jwt.verify(token, 'secret');
+  }
+  catch(err){
+    console.error(err);
+    response.sendStatus(400);
+    return;
+  }
 
   db.managers.findByPk(decode.id)
   .then((m) =>{
@@ -30,6 +45,7 @@ app.use((request, response, next) =>{
   })
   .catch((err) =>{
     response.sendStatus(403);
+    return;
   })
 })
 

@@ -214,6 +214,14 @@ motionsRouter.post('/create', (req, res) => {
     return;
   }
 
+  db.vehicles.findByPk(req.body.vehicleId)
+    .then((v) =>{
+      if (!req.manager.super && v.fleetId != req.manager.fleetTd){
+        res.sendStatus(403);
+        return;
+      }
+    });
+
   db.motions.create({
     longitude: req.body.longitude,
     latitude: req.body.latitude,
@@ -229,6 +237,14 @@ motionsRouter.post('/create', (req, res) => {
 app.use("/api/motions", motionsRouter);
 
 geoRouter.get('/millage', (req, res) => {
+  db.vehicles.findByPk(req.query.id)
+    .then((v) =>{
+      if (!req.manager.super && v.fleetId != req.manager.fleetTd){
+        res.sendStatus(403);
+        return;
+      }
+    });
+
   db.motions.findAll({attributes: ['latitude', 'longitude'], where:{vehicleId: req.query.id}, raw: true}).then((m) =>{
     if (m.lenght < 2) res.sendStatus(404);
     else res.send(JSON.stringify(

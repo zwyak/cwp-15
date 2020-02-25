@@ -126,14 +126,21 @@ fleetsRouter.post('/delete', (req, res) => {
 app.use("/api/fleets", fleetsRouter);
 
 vehiclesRouter.get('/readall', (req, res) => {
-  db.vehicles.findAll({raw: true}).then((v) =>{
-    res.send(v);
-  });
+  if (req.manager.super){
+    db.vehicles.findAll({raw: true}).then((v) =>{
+      res.send(v);
+    });
+  }else{
+    db.vehicles.findAll({where:{fleetId:req.manager.fleetId}, raw: true}).then((v) =>{
+      res.send(v);
+    });
+  }
 });
 
 vehiclesRouter.get('/read', (req, res) => {
   db.vehicles.findByPk(req.query.id, {raw: true}).then((v) =>{
-    res.send(v);
+    if (v.fleetId == req.manager.fleetId) res.send(v);
+    else res.sendStatus(404);
   })
   .catch((err) =>{
     res.sendStatus(404);
@@ -143,7 +150,7 @@ vehiclesRouter.get('/read', (req, res) => {
 vehiclesRouter.post('/create', (req, res) => {
   db.vehicles.create({
     name: req.body.name,
-    fleetId: req.body.fleetId
+    fleetId: req.manager.super ? req.body.fleetId : req.manager.fleetId
   }).then((v) =>{
     res.send(v.dataValues);
   }).catch((err) =>{
@@ -157,9 +164,17 @@ vehiclesRouter.post('/update', (req, res) => {
     return;
   }
 
+  db.vehicles.findByPk(req.body.id)
+    .then((v) =>{
+      if (!req.manager.super && v.fleetId != req.manager.fleetTd){
+        res.sendStatus(403);
+        return;
+      }
+    });
+
   db.vehicles.update({
     name: req.body.name,
-    fleetId: req.body.fleetId
+    fleetId: req.manager.super ? req.body.fleetId : req.manager.fleetId
   }, {
     where: {
       id: req.body.id
@@ -172,6 +187,14 @@ vehiclesRouter.post('/update', (req, res) => {
 });
 
 vehiclesRouter.post('/delete', (req, res) => {
+  db.vehicles.findByPk(req.body.id)
+    .then((v) =>{
+      if (!req.manager.super && v.fleetId != req.manager.fleetTd){
+        res.sendStatus(403);
+        return;
+      }
+    });
+
   db.vehicles.destroy({
     where: {
       id: req.body.id

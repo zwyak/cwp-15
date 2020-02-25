@@ -71,6 +71,10 @@ fleetsRouter.get('/read', (req, res) => {
 });
 
 fleetsRouter.post('/create', (req, res) => {
+  if (!req.manager.super){
+    res.sendStatus(403);
+    return;
+  }
   db.fleets.create({
     name: req.body.name
   }).then((f) =>{
@@ -81,6 +85,10 @@ fleetsRouter.post('/create', (req, res) => {
 });
 
 fleetsRouter.post('/update', (req, res) => {
+  if (!req.manager.super){
+    res.sendStatus(403);
+    return;
+  }
   if (!utils.fleetValidate(req.body.id, req.body.name)){
     res.sendStatus(400);
     return;
@@ -100,6 +108,10 @@ fleetsRouter.post('/update', (req, res) => {
 });
 
 fleetsRouter.post('/delete', (req, res) => {
+  if (!req.manager.super){
+    res.sendStatus(403);
+    return;
+  }
   db.fleets.destroy({
     where: {
       id: req.body.id

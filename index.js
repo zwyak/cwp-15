@@ -50,6 +50,10 @@ app.use((request, response, next) =>{
 })
 
 fleetsRouter.get('/readall', (req, res) => {
+  if (!req.manager.super){
+    res.sendStatus(403);
+    return;
+  }
   db.fleets.findAll({raw: true}).then((f) =>{
     res.send(f);
   }).catch((err) =>{

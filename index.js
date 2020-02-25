@@ -62,7 +62,7 @@ fleetsRouter.get('/readall', (req, res) => {
 });
 
 fleetsRouter.get('/read', (req, res) => {
-  db.fleets.findByPk(req.query.id, {raw: true}).then((f) =>{
+  db.fleets.findByPk(req.manager.super ? req.query.id : req.manager.fleetId, {raw: true}).then((f) =>{
     res.send(f);
   })
   .catch((err) =>{
